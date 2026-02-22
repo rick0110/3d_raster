@@ -1,0 +1,280 @@
+\documentclass[12pt, a4paper]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[portuguese]{babel}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{graphicx}
+\usepackage{geometry}
+\usepackage{hyperref}
+\usepackage{float}
+\usepackage{subcaption}
+
+\geometry{top=2.5cm, bottom=2.5cm, left=3cm, right=3cm}
+
+\title{\textbf{Relatório do Projeto de Ray Tracing}}
+\author{Implementação de Primitivas, Transformações e Reflexão}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+Este relatório descreve a formulação matemática e a implementação de recursos de \textit{Ray Tracing} desenvolvidos no projeto.
+O escopo abrange desde o cálculo de interseção para primitivas geométricas básicas (Cubo e Cilindro), passando pela aplicação de transformações aos objetos, até à renderização de superfícies implícitas e simulação de reflexões (espelhos).
+\end{abstract}
+
+\section{Interseção com Primitivas Geométricas}
+
+Para renderizar os objetos na cena, o algoritmo de \textit{ray tracing} calcula o ponto de interseção do raio emitido pela câmara com a geometria do objeto.
+O raio paramétrico é dado por:
+\begin{equation}
+    p(t) = o + td, \quad t \ge 0
+\end{equation}
+onde $o$ é a origem do raio e $d$ é a direção.
+
+\subsection{Cubo (Método das \textit{Slabs})}
+Considere um cubo alinhado aos eixos, centrado na origem, com faces limitadas por $s$:
+\begin{equation}
+    x, y, z \in \left[-\frac{s}{2}, \frac{s}{2}\right]
+\end{equation}
+Para determinar a interseção, avaliamos o raio contra os três pares de planos paralelos (as \textit{slabs}).
+Para cada eixo, montamos o seguinte sistema de desigualdades:
+\begin{align}
+    x_{min} \le o_x + d_x t \le x_{max} \\
+    y_{min} \le o_y + d_y t \le y_{max} \\
+    z_{min} \le o_z + d_z t \le z_{max}
+\end{align}
+
+O menor valor de $t$ positivo que satisfaz simultaneamente a interseção com todos os limites corresponde ao ponto de impacto visível.
+A evolução visual da renderização com o aumento de amostras (\textit{samples}) pode ser observada abaixo:
+
+\begin{figure}[H]
+    \centering
+    \begin{subfigure}[b]{0.3\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{../imgs/cube_outside100x100_0_samples.png}
+        \caption{100x100, 0 samples}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.3\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{../imgs/scene_cube_128_samples_250x250.png}
+        \caption{250x250, 128 samples}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.3\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{../imgs/scene_cube_128_samples_700x700.png}
+        \caption{700x700, 128 samples}
+    \end{subfigure}
+    \caption{Renderizações da primitiva Cubo com diferentes resoluções e \textit{anti-aliasing}.}
+\end{figure}
+
+\subsection{Cilindro}
+Para verificar a interseção do raio paramétrico com um cilindro alinhado ao eixo $z$, substituímos os componentes $x$ e $y$ do raio na equação da superfície lateral do cilindro:
+\begin{equation}
+    (o_x + d_x t)^2 + (o_y + d_y t)^2 = r^2
+\end{equation}
+Expandindo os termos, obtemos uma equação de grau 2 na forma $at^2 + bt + c = 0$, 
+onde:
+\begin{align}
+    a &= d_x^2 + d_y^2 \\
+    b &= 2(o_x d_x + o_y d_y) \\
+    c &= o_x^2 + o_y^2 - r^2
+\end{align}
+Pegamos no menor $t$ positivo que resolve a equação e verificamos se a curva do raio avaliado nele satisfaz as restrições de altura.
+Caso contrário, verificamos a interseção com as tampas planas.
+
+\begin{figure}[H]
+    \centering
+    \begin{subfigure}[b]{0.3\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{../imgs/cylinder100x100_0_samples.png}
+        \caption{250x250, 64 samples}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.3\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{../imgs/scene_cylinder_128_samples_250x250.png}
+        \caption{250x250, 128 samples}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.3\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{../imgs/scene_cylinder_128_samples_1000x1000.png}
+        \caption{700x700, 128 samples}
+    \end{subfigure}
+    \caption{Evolução da renderização da primitiva Cilindro.}
+\end{figure}
+
+\section{Transformações de Objetos}
+Para posicionar, rodar e escalonar objetos sem reescrever as suas equações de interseção, utilizamos a classe \texttt{ObjectTransform}.
+Seja $M$ a matriz de transformação. Aplicamos a transformação inversa $M^{-1}$ ao raio incidente, levando-o para o espaço local do objeto:
+\begin{equation}
+    w = M^{-1}x \quad \Rightarrow \quad g(x) = f(M^{-1}x)
+\end{equation}
+A normal $\nabla f(w)$ é mapeada de volta para o espaço do mundo multiplicando pela transposta da inversa:
+\begin{equation}
+    \nabla g(x) = (M^{-1})^T \nabla f(M^{-1}x)
+\end{equation}
+
+\begin{figure}[H]
+    \centering
+    \begin{subfigure}[b]{0.3\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{../imgs/scene_q2_100x100_32_samples.png}
+        \caption{100x100, 32 samples}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.3\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{../imgs/scene_q2_250x250_32_samples.png}
+        \caption{250x250, 32 samples}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.3\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{../imgs/scene_q2_700x700_32_samples.png}
+        \caption{700x700, 32 samples}
+    \end{subfigure}
+    \caption{Aplicação de transformações matriciais a objetos na cena.}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \begin{subfigure}[b]{0.3\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{../imgs/scene_q2_100x100_128_samples.png}
+        \caption{100x100, 700 samples}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.3\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{../imgs/scene_q2_250x250_128_samples.png}
+        \caption{250x250, 700 samples}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.3\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{../imgs/scene_q2_700x700_128_samples.png}
+        \caption{700x700, 700 samples}
+    \end{subfigure}
+    \caption{Aplicação de transformações matriciais a objetos na cena.}
+\end{figure}
+
+\section{Superfícies Implícitas (Mitchel e Heart)}
+A interseção do raio com superfícies de \textit{Mitchel} e coração (\textit{Heart}) não possui solução analítica simples.
+Utilizamos algoritmos de busca numéricos (como verificação de sinais e bisseção) ao longo do raio para encontrar as raízes.
+
+\begin{figure}[H]
+    \centering
+    \begin{subfigure}[b]{0.45\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{../imgs/scene_heart_mitchel_32_samples_100x100.png}
+        \caption{Heart/Mitchel 100x100, 32 samples}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.45\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{../imgs/scene_heart_mitchel_32_samples_250x250.png}
+        \caption{Heart/Mitchel 700x700, 32 samples}
+    \end{subfigure}
+    \caption{Renderização de superfícies implícitas com aproximação numérica.}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \begin{subfigure}[b]{0.45\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{../imgs/scene_heart_mitchel_700_samples_100x100.png}
+        \caption{Heart/Mitchel 100x100, 700 samples}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.45\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{../imgs/scene_heart_mitchel_700_samples_250x250.png}
+        \caption{Heart/Mitchel 700x700, 700 samples}
+    \end{subfigure}
+    \caption{Renderização de superfícies implícitas com aproximação numérica.}
+\end{figure}
+
+\section{Reflexão e Espelhos}
+O \textit{ray tracer} foi estendido para suportar reflexões.
+A direção da reflexão $\vec{R}$ é dada por:
+\begin{equation}
+    \vec{R} = \vec{d} - 2(\vec{d} \cdot \vec{n})\vec{n}
+\end{equation}
+O raio refletido continua a propagar-se pela cena num processo recursivo, limitado pelo parâmetro \texttt{max\_depth} para evitar sobrecarga em reflexões infinitas.
+
+\begin{figure}[H]
+    \centering
+    \begin{subfigure}[b]{0.3\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{../imgs/scene_infinite_mirrors_32_samples_250x250_depth_3.png}
+        \caption{Depth = 3}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.3\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{../imgs/scene_infinite_mirrors_32_samples_250x250_depth_10.png}
+        \caption{Depth = 10}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.3\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{../imgs/scene_infinite_mirrors_32_samples_250x250_depth_100.png}
+        \caption{Depth = 100}
+    \end{subfigure}
+    \caption{Simulação de espelhos infinitos variando o limite de recursão (\textit{max\_depth}).}
+\end{figure}
+
+\section{Profundidade de Campo}
+Para simular o efeito fotográfico de profundidade de campo, substituímos a clássica câmara do tipo \textit{pinhole} ``ideal'' por um modelo de câmara com abertura de lente maior que zero (abertura $> 0$). No modelo \textit{pinhole} ideal, a imagem inteira está sempre perfeitamente em foco pois todos os raios convergem exatamente num único ponto matemático.
+
+Ao utilizar uma abertura, estabelece-se um \textbf{plano focal} na cena. O ponto de interseção ótimo projetado nesse plano é chamado de $p_f$. Durante o processamento, a origem do raio da câmara não parte mais apenas do centro geométrico, mas sim de pontos amostrados uniformemente ao longo da área de uma lente (um disco). O novo raio toma a direção apontando da origem amostrada na lente diretamente para o ponto focal $p_f$.
+
+Com essa técnica, a luz advinda de objetos que intercetam o plano focal continua alinhada com $p_f$, e sua imagem fica nítida na projeção final. Por outro lado, a luz de objetos fora desta distância focal dispersa os raios, provocando o característico desfoque nas regiões próximas ou longínquas. 
+
+Abaixo, podemos observar as renderizações demonstrando este fenómeno, variando a posição do plano focal:
+
+\begin{figure}[H]
+    \centering
+    \begin{subfigure}[b]{0.3\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{../imgs/scene_focal_1.png}
+        \caption{Raio = 0.1, Distância Focal = 20}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.3\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{../imgs/scene_focal_2.png}
+        \caption{Raio = 0.8, Distância Focal = 20}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.3\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{../imgs/scene_focal_3.png}
+        \caption{Raio = 0.1, Distância Focal = 10}
+    \end{subfigure}
+    
+    \vspace{0.5cm}
+    \begin{subfigure}[b]{0.45\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{../imgs/scene_focal_4.png}
+        \caption{Raio = 0.8, Distância Focal = 10}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.45\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{../imgs/scene_focal_5.png}
+        \caption{Raio = 1.5, Distância Focal =10.77}
+    \end{subfigure}
+    \caption{Renderizações ilustrando o efeito de Profundidade de Campo com variados parâmetros focais.}
+\end{figure}
+
+\section{Conclusões}
+A base matemática e algorítmica do rasterizador foi corretamente implementada, como demonstram as imagens.
+O uso de equações quadráticas para geometrias primitivas, combinado com a aproximação numérica para superfícies implícitas e reflexões limitadas por profundidade, resultou num motor robusto capaz de gerar as cenas pretendidas com alta qualidade visual e \textit{anti-aliasing}.
+\end{document}

@@ -1,0 +1,157 @@
+
+% Slides explicando o cálculo do hit do cubo (método das slabs)
+\documentclass{beamer}
+\usepackage[utf8]{inputenc}
+\usepackage[brazil]{babel}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\title{Interseção Raio -- Cubo (Slabs)}
+\author{tcv_raytracer_2026}
+\date{\today}
+
+\begin{document}
+
+\begin{frame}
+	\titlepage
+\end{frame}
+
+\begin{frame}{Objetivo}
+	- Explicar o raciocínio matemático por trás do método das "slabs" para
+		interseção raio-cubo.
+  
+	- Mostrar as desigualdades fundamentais e como combiná-las para obter
+		o intervalo de parâmetros $t$ do raio.
+  
+	- Incluir um trecho de código de referência e comandos para teste em baixa
+		resolução.
+\end{frame}
+
+\begin{frame}{Equações iniciais}
+	Considere um cubo alinhado aos eixos, centrado na origem, com faces em
+	$x\in[-\tfrac{s}{2},\tfrac{s}{2}]$, $y\in[-\tfrac{s}{2},\tfrac{s}{2}]$,
+	$z\in[-\tfrac{s}{2},\tfrac{s}{2}]$. O raio paramétrico é
+  
+	$$\mathbf{p}(t)=\mathbf{o}+t\,\mathbf{d},\qquad t\ge 0$$
+
+	Para cada eixo temos as desigualdades (conforme a imagem fornecida):
+
+	\begin{align*}
+		x_{\min} &\le o_x + d_x t \le x_{\max} \\
+		y_{\min} &\le o_y + d_y t \le y_{\max} \\
+		z_{\min} &\le o_z + d_z t \le z_{\max}
+	\end{align*}
+
+	Rearranjando cada desigualdade isolamos $t$ (assumindo $d_i\neq 0$):
+
+	\begin{align*}
+		\frac{x_{\min}-o_x}{d_x} &\le t \le \frac{x_{\max}-o_x}{d_x} \\
+		\frac{y_{\min}-o_y}{d_y} &\le t \le \frac{y_{\max}-o_y}{d_y} \\
+		\frac{z_{\min}-o_z}{d_z} &\le t \le \frac{z_{\max}-o_z}{d_z}
+	\end{align*}
+  
+	Observação: quando $d_i<0$ os limites acima trocam de ordem (por isso usamos min/max).
+\end{frame}
+
+\begin{frame}{Combinação dos intervalos (slabs)}
+	Para cada eixo calculemos os dois valores
+	\(t_{i1} = \frac{min_i - o_i}{d_i}\) e \(t_{i2} = \frac{max_i - o_i}{d_i}\)
+	e definimos:
+
+	\[ t_{i\_min} = \min(t_{i1},t_{i2}), \qquad t_{i\_max} = \max(t_{i1},t_{i2}). \]
+
+	O intervalo de interseção global é a interseção dos três intervalos:
+
+	\[ t_{enter} = \max\{t_{x\_min}, t_{y\_min}, t_{z\_min}\},\\
+		 t_{exit}  = \min\{t_{x\_max}, t_{y\_max}, t_{z\_max}\}.\]
+
+	Condição de interseção: \(t_{enter} \le t_{exit}\) e existe um t válido
+	maior que `CastEpsilon`.
+\end{frame}
+
+\begin{frame}{Detalhes de implementação}
+	- Tratar componentes de direção próximas de zero: se $d_i\approx 0$, o
+		raio é paralelo ao par de planos naquela direção; o teste verifica se
+		$o_i$ está dentro do intervalo (slab).\\
+	- Seleção do t final: se $t_{enter} > \varepsilon$ use $t=t_{enter}$;
+		senão, se $t_{exit} > \varepsilon$ use $t=t_{exit}$ (o raio começa dentro).
+  
+	- Determinar a normal: depois de obter o ponto de interseção, comparar
+		qual coordenada do ponto está mais próxima de uma face (usar tolerância).
+\end{frame}
+
+\begin{frame}[fragile]{Trecho de código (referência)}
+\begin{verbatim}
+		def hit(self, ray):
+				half = self.size / 2.0
+				eps_dir = 1e-12
+
+				# X slab
+				if abs(ray.direction.x) < eps_dir:
+						tx_min, tx_max = float('-inf'), float('inf')
+				else:
+						t1 = (-half - ray.origin.x) / ray.direction.x
+						t2 = ( half - ray.origin.x) / ray.direction.x
+						tx_min, tx_max = min(t1,t2), max(t1,t2)
+
+				# Y slab (similar)
+				if abs(ray.direction.y) < eps_dir:
+						ty_min, ty_max = float('-inf'), float('inf')
+				else:
+						t1 = (-half - ray.origin.y) / ray.direction.y
+						t2 = ( half - ray.origin.y) / ray.direction.y
+						ty_min, ty_max = min(t1,t2), max(t1,t2)
+
+				# Z slab (similar)
+				if abs(ray.direction.z) < eps_dir:
+						tz_min, tz_max = float('-inf'), float('inf')
+				else:
+						t1 = (-half - ray.origin.z) / ray.direction.z
+						t2 = ( half - ray.origin.z) / ray.direction.z
+						tz_min, tz_max = min(t1,t2), max(t1,t2)
+
+				# intersection interval
+				t_enter = max(tx_min, ty_min, tz_min)
+				t_exit  = min(tx_max, ty_max, tz_max)
+
+				if t_enter > t_exit:
+						return HitRecord(False, float('inf'), None, None)
+
+				# choose nearest valid t > CastEpsilon
+				t = t_enter if t_enter > CastEpsilon else (t_exit if t_exit > CastEpsilon else None)
+				if t is None:
+						return HitRecord(False, float('inf'), None, None)
+
+				point = ray.point_at_parameter(t)
+
+				# determine hit face by checking which coordinate is closest to a face
+				eps = 1e-6
+				if abs(point.x - (-half)) < eps:
+						normal = Vector3D(-1, 0, 0)
+				elif abs(point.x - half) < eps:
+						normal = Vector3D(1, 0, 0)
+				elif abs(point.y - (-half)) < eps:
+						normal = Vector3D(0, -1, 0)
+				elif abs(point.y - half) < eps:
+						normal = Vector3D(0, 1, 0)
+				elif abs(point.z - (-half)) < eps:
+						normal = Vector3D(0, 0, -1)
+				else:
+						normal = Vector3D(0, 0, 1)
+
+				return HitRecord(hit=True, t=t, point=point, normal=normal)
+\end{verbatim}
+\end{frame}
+
+\begin{frame}{Comandos rápidos para testar}
+	Altere a cena para baixa resolução (ex.: 160x120) e rode com 4 núcleos:
+
+	\begin{verbatim}
+	sed -i "s/img_width=800, img_height=600/img_width=160, img_height=120/" ball_scene.py
+	python raster.py -s ball_scene -n 1 -j 4 -o output_lowres.png
+	sed -i "s/img_width=160, img_height=120/img_width=800, img_height=600/" ball_scene.py
+	\end{verbatim}
+
+	Verifique `output_lowres.png` gerado.
+\end{frame}
+
+\end{document}
