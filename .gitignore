@@ -95,3 +95,7 @@ imgs/*.png
 imgs/*.gif
 *.png
 *.gif
+
+
+#data
+material_data/

@@ -2,3 +2,4 @@ matplotlib
 numpy
 tqdm
 PySide6
+torch

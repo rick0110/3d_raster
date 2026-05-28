@@ -5,12 +5,12 @@ Module name: scene_editor_output
 """
 import math
 import numpy as np
-from src.base import BaseScene, Color
-from src.vector3d import Vector3D
-from src.camera import Camera
-from src.light import AreaLight
-from src.shapes import Ball, Cube, PlaneUV, ObjectTransform, Translate, Cilinder
-from src.materials import SimpleMaterialWithShadows, CheckerboardMaterial, ReflectiveMaterial
+from raytracer.base import BaseScene, Color
+from raytracer.vector3d import Vector3D
+from raytracer.camera import Camera
+from raytracer.light import AreaLight
+from raytracer.shapes import Ball, Cube, PlaneUV, ObjectTransform, Translate, Cilinder
+from raytracer.materials import SimpleMaterialWithShadows, CheckerboardMaterial, ReflectiveMaterial
 
 def _m(m):
     return np.array(m, dtype=float)

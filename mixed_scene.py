@@ -5,12 +5,12 @@ diferentes (difuso, especular, translúcido, checkerboard).
 import math
 import numpy as np
 
-from src.base import BaseScene, Color
-from src.shapes import Ball, Cube, Cilinder, PlaneUV, Translate, ObjectTransform
-from src.camera import Camera
-from src.vector3d import Vector3D
-from src.light import PointLight
-from src.materials import (
+from raytracer.base import BaseScene, Color
+from raytracer.shapes import Ball, Cube, Cilinder, PlaneUV, Translate, ObjectTransform
+from raytracer.camera import Camera
+from raytracer.vector3d import Vector3D
+from raytracer.light import PointLight
+from raytracer.materials import (
     SimpleMaterial,
     SimpleMaterialWithShadows,
     TranslucidMaterial,

@@ -1,10 +1,10 @@
 import math
-from src.base import BaseScene, Color
-from src.shapes import Ball, PlaneUV
-from src.camera import Camera_with_focal_depth
-from src.vector3d import Vector3D
-from src.light import PointLight, AreaLight
-from src.materials import SimpleMaterial, CheckerboardMaterial
+from raytracer.base import BaseScene, Color
+from raytracer.shapes import Ball, PlaneUV
+from raytracer.camera import Camera_with_focal_depth
+from raytracer.vector3d import Vector3D
+from raytracer.light import PointLight, AreaLight
+from raytracer.materials import SimpleMaterial, CheckerboardMaterial
 
 class BaseFocalScene(BaseScene):
     def __init__(self, radius, focal_dist):

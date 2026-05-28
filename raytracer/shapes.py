@@ -1,6 +1,6 @@
-from src.vector3d import Vector3D
+from .backend import abs_value as abs, max_value as max, min_value as min, np
+from .vector3d import Vector3D
 from .base import Shape, HitRecord, CastEpsilon
-import numpy as np
 from .ray import Ray
 
 class Ball(Shape):
@@ -247,8 +247,8 @@ class ObjectTransform(Shape):
         self.inverse_transform_func = np.linalg.inv(self.transform_func)
 
     def hit(self, ray):
-        direction = np.array(ray.direction.as_list())
-        origin = np.array(ray.origin.as_list())
+        direction = np.array([ray.direction.x, ray.direction.y, ray.direction.z])
+        origin = np.array([ray.origin.x, ray.origin.y, ray.origin.z])
         direction_inv = self.inverse_transform_func @ direction
         origin_inv = self.inverse_transform_func @ origin
         norm_dir_inv = np.linalg.norm(direction_inv)
@@ -257,8 +257,8 @@ class ObjectTransform(Shape):
         hit_rec = self.shape.hit(ray_in_obj_space)
         
         if hit_rec.hit:
-            point_obj_space = np.array(hit_rec.point.as_list())
-            normal_obj_space = np.array(hit_rec.normal.as_list())
+            point_obj_space = np.array([hit_rec.point.x, hit_rec.point.y, hit_rec.point.z])
+            normal_obj_space = np.array([hit_rec.normal.x, hit_rec.normal.y, hit_rec.normal.z])
 
             point_world_space = self.transform_func @ point_obj_space
             normal_world_space = self.inverse_transform_func.T @ normal_obj_space
@@ -279,7 +279,7 @@ class Paraboloid:
         self.type = "paraboloid"
 
     def hit(self, ray):
-        from src.base import HitRecord, CastEpsilon
+        from raytracer.base import HitRecord, CastEpsilon
         ox, oy, oz = ray.origin.x, ray.origin.y, ray.origin.z
         dx, dy, dz = ray.direction.x, ray.direction.y, ray.direction.z
 
@@ -312,7 +312,7 @@ class Paraboloid:
         return HitRecord(True, t, point, normal)
 
 def mitchel_function(point):
-    x, y, z = point.as_list()
+    x, y, z = point.x, point.y, point.z
     return 4*(x**4 + (y**2+z**2)**2 + 17*x**2*(y**2+z**2)) - 20*(x**2+y**2+z**2) + 17
 
 class Mitchel_func(ImplicitFunction):
@@ -320,7 +320,7 @@ class Mitchel_func(ImplicitFunction):
         super().__init__(mitchel_function)
     
     def grad(self, point):
-        x, y, z = point.as_list()
+        x, y, z = point.x, point.y, point.z
         return (16*x**3 + 136*x*(y**2 + z**2) - 40*x,
                 16*y*(y**2 + z**2) + 136*x**2*y - 40*y,
                 16*z*(y**2 + z**2) + 136*x**2*z - 40*z)
@@ -365,7 +365,7 @@ class Mitchel(Mitchel_func):
 
 # Heart implicit function (module-level so multiprocessing can pickle it)
 def heart_function(point):
-    x, y, z = point.as_list()
+    x, y, z = point.x, point.y, point.z
     A = x**2 + (9.0/4.0) * y**2 + z**2 - 1
     return A**3 - x**2 * z**3 - (9.0/80.0) * y**2 * z**3
 
@@ -375,7 +375,7 @@ class Heart_func(ImplicitFunction):
         super().__init__(heart_function)
 
     def grad(self, point):
-        x, y, z = point.as_list()
+        x, y, z = point.x, point.y, point.z
         A = x**2 + (9.0/4.0) * y**2 + z**2 - 1
         # df/dx = 3*A^2 * 2x - 2x*z^3 = 2x*(3*A^2 - z^3)
         dx = 2 * x * (3 * (A ** 2) - z ** 3)

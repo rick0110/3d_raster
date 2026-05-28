@@ -1,0 +1,20 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "python-raytracer"
+version = "0.1.0"
+description = "Raytracer em Python com editor de cenas"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+  "matplotlib",
+  "numpy",
+  "tqdm",
+  "PySide6",
+  "torch",
+]
+
+[tool.setuptools]
+packages = ["raytracer"]

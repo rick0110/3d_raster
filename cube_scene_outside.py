@@ -1,10 +1,10 @@
 import math
-from src.base import BaseScene, Color
-from src.shapes import Cube, PlaneUV
-from src.camera import Camera
-from src.vector3d import Vector3D
-from src.light import PointLight
-from src.materials import SimpleMaterial
+from raytracer.base import BaseScene, Color
+from raytracer.shapes import Cube, PlaneUV
+from raytracer.camera import Camera
+from raytracer.vector3d import Vector3D
+from raytracer.light import PointLight
+from raytracer.materials import SimpleMaterial
 
 class Scene(BaseScene):
     def __init__(self):

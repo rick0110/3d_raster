@@ -9,7 +9,8 @@ import numpy as np
 from tqdm import tqdm
 import matplotlib.pyplot as plt
 
-from src.base import Color
+from raytracer.base import Color
+from raytracer.backend import set_default_device
 
 class Context:
     def __init__(self, **kwargs):
@@ -54,7 +55,7 @@ def main(args, pool):
     print("Rendering... with anti-aliasing samples:", args.num_samples)
     context = Context(scene=scene, camera=camera, num_samples=args.num_samples)
     with tqdm(total=img_height*img_width) as pbar:
-        if args.num_jobs <= 1:
+        if args.num_jobs <= 1 or args.device == 'cuda':
             for i, j in product(range(img_height), range(img_width)):
                 _, _, pixel = render_pixel(context, (i, j))
                 image[i, j] = np.clip(pixel.as_list(), 0, 1)
@@ -75,10 +76,14 @@ if __name__ == "__main__":
     parser.add_argument('-n', '--num_samples', type=int, help='Number of samples per pixel for anti-aliasing', default=1)
     parser.add_argument('-j', '--num_jobs', type=int, help='Number of parallel jobs for rendering', default=4)
     parser.add_argument('-o', '--output', type=str, help='Output image file name', default='output.png')
+    parser.add_argument('--device', type=str, help='Execution device: cpu or cuda', default='cpu')
     args = parser.parse_args()
 
-    # create a pool of workers for parallel processing
-    pool = Pool(args.num_jobs)
+    set_default_device(args.device)
+
+    # create a pool of workers for parallel processing only on CPU
+    pool = None if args.device == 'cuda' or args.num_jobs <= 1 else Pool(args.num_jobs)
     main(args, pool)
-    pool.close()
-    pool.join()
+    if pool is not None:
+        pool.close()
+        pool.join()

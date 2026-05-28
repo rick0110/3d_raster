@@ -1,6 +1,8 @@
+from .backend import clamp_value, max_value as max, min_value as min
 from .ray import Ray
 from .camera import Camera
 from .vector3d import Vector3D
+from .backend import to_float
 
 CastEpsilon = 1e-4
 
@@ -27,12 +29,12 @@ class Color(Vector3D):
         return self.z
 
     def clamp(self, min_value=0.0, max_value=1.0):
-        self.x = max(min(self.x, max_value), min_value)
-        self.y = max(min(self.y, max_value), min_value)
-        self.z = max(min(self.z, max_value), min_value)
+        self.x = clamp_value(self.x, min_value, max_value)
+        self.y = clamp_value(self.y, min_value, max_value)
+        self.z = clamp_value(self.z, min_value, max_value)
 
     def as_list(self):
-        return [self.x, self.y, self.z]
+        return [to_float(self.x), to_float(self.y), to_float(self.z)]
 
 class BaseScene:
     def __init__(self, name):

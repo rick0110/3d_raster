@@ -1,6 +1,5 @@
 # world is right-handed, z is up
-import math
-import random
+from .backend import math, random
 
 from .ray import Ray
 

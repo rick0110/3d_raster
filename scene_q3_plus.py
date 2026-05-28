@@ -9,16 +9,16 @@ Sem espelhos (ReflectiveMaterial).
 import math
 import numpy as np
 
-from src.base import BaseScene, Color
-from src.shapes import (
+from raytracer.base import BaseScene, Color
+from raytracer.shapes import (
     Ball, Cube, Cilinder, PlaneUV,
     Heart, Mitchel, Paraboloid,
     ObjectTransform, Translate,
 )
-from src.vector3d import Vector3D
-from src.camera import Camera
-from src.light import PointLight, AreaLight
-from src.materials import (
+from raytracer.vector3d import Vector3D
+from raytracer.camera import Camera
+from raytracer.light import PointLight, AreaLight
+from raytracer.materials import (
     SimpleMaterial,
     SimpleMaterialWithShadows,
     TranslucidMaterial,

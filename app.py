@@ -136,15 +136,15 @@ def export_scene_py(scene: SceneSpec, out_path: str) -> None:
     )
     lines.append("import math")
     lines.append("import numpy as np")
-    lines.append("from src.base import BaseScene, Color")
-    lines.append("from src.vector3d import Vector3D")
-    lines.append("from src.camera import Camera")
-    lines.append("from src.light import AreaLight")
+    lines.append("from raytracer.base import BaseScene, Color")
+    lines.append("from raytracer.vector3d import Vector3D")
+    lines.append("from raytracer.camera import Camera")
+    lines.append("from raytracer.light import AreaLight")
     lines.append(
-        "from src.shapes import Ball, Cube, PlaneUV, ObjectTransform, Translate, Cilinder"
+        "from raytracer.shapes import Ball, Cube, PlaneUV, ObjectTransform, Translate, Cilinder"
     )
     lines.append(
-        "from src.materials import SimpleMaterialWithShadows, CheckerboardMaterial, ReflectiveMaterial"
+        "from raytracer.materials import SimpleMaterialWithShadows, CheckerboardMaterial, ReflectiveMaterial"
     )
     lines.append("")
 

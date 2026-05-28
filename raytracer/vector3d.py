@@ -1,8 +1,11 @@
+from .backend import coerce_component, to_float
+
+
 class Vector3D:
     def __init__(self, x: float, y: float, z: float):
-        self.x = x
-        self.y = y
-        self.z = z
+        self.x = coerce_component(x)
+        self.y = coerce_component(y)
+        self.z = coerce_component(z)
 
     def __add__(self, other: 'Vector3D') -> 'Vector3D':
         return self.__class__(self.x + other.x, self.y + other.y, self.z + other.z)
@@ -39,10 +42,10 @@ class Vector3D:
         return self.__class__(self.x * other.x, self.y * other.y, self.z * other.z)
 
     def __str__(self) -> str:
-        return f"Vector3D({self.x}, {self.y}, {self.z})"
+        return f"Vector3D({to_float(self.x)}, {to_float(self.y)}, {to_float(self.z)})"
 
     def __neg__(self) -> 'Vector3D':
         return self.__class__(-self.x, -self.y, -self.z)
 
     def as_list(self):
-        return [self.x, self.y, self.z]
+        return [to_float(self.x), to_float(self.y), to_float(self.z)]

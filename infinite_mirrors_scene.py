@@ -1,10 +1,10 @@
 import numpy as np
-from src.base import BaseScene, Color
-from src.shapes import Cube, Ball, PlaneUV, Translate
-from src.vector3d import Vector3D
-from src.camera import Camera
-from src.light import PointLight, AreaLight
-from src.materials import SimpleMaterialWithShadows, CheckerboardMaterial, ReflectiveMaterial
+from raytracer.base import BaseScene, Color
+from raytracer.shapes import Cube, Ball, PlaneUV, Translate
+from raytracer.vector3d import Vector3D
+from raytracer.camera import Camera
+from raytracer.light import PointLight, AreaLight
+from raytracer.materials import SimpleMaterialWithShadows, CheckerboardMaterial, ReflectiveMaterial
 
 class Scene(BaseScene):
     def __init__(self):

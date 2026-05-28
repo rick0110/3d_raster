@@ -7,12 +7,12 @@ Notes:
 """
 import math
 import numpy as np
-from src.base import BaseScene, Color
-from src.shapes import Cube, Ball, PlaneUV, ObjectTransform, Paraboloid, Translate, Mitchel, Heart
-from src.vector3d import Vector3D
-from src.camera import Camera
-from src.light import PointLight, AreaLight
-from src.materials import SimpleMaterialWithShadows, CheckerboardMaterial, ReflectiveMaterial
+from raytracer.base import BaseScene, Color
+from raytracer.shapes import Cube, Ball, PlaneUV, ObjectTransform, Paraboloid, Translate, Mitchel, Heart
+from raytracer.vector3d import Vector3D
+from raytracer.camera import Camera
+from raytracer.light import PointLight, AreaLight
+from raytracer.materials import SimpleMaterialWithShadows, CheckerboardMaterial, ReflectiveMaterial
 
 def identity3():
     return np.eye(3, dtype=float)

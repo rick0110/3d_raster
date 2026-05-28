@@ -1,5 +1,4 @@
-import math
-
+from .backend import math, max_value as max
 from .base import Color, CastEpsilon, Material
 from .ray import Ray
 from .vector3d import Vector3D
